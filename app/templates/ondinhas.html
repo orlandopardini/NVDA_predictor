@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Stock LSTM{% endblock %}</title>
+
+  <!-- Importa CSS estático -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+    <div id="binary-bg" aria-hidden="true">
+    <pre id="binary-pre"></pre>
+    <pre class="clone"></pre>
+    </div>
+
+    <section id="vscode-hero" aria-hidden="true">
+    <div class="vscode-hero__gradient"></div>
+    <canvas id="vscode-hero-canvas"></canvas>
+    <div id="vscode-hero-grid"></div>
+  </section>
+  <!-- Fundo com a malha binária -->
+  <div id="static-binary-grid" aria-hidden="true"></div>
+
+  <div class="container">
+    <h1>Stock LSTM — Monitoramento e Previsões</h1>
+    <p><a href="/apidocs">Swagger</a> · <a href="/simulate">Simular Data</a></p>
+    {% block content %}{% endblock %}
+  </div>
+
+  <!-- script que injeta o texto no attr(data-bits) -->
+  <script>
+  (async () => {
+    try {
+      const r = await fetch('/static/binary.txt');   // seu textão
+      const bits = await r.text();
+      const grid = document.getElementById('static-binary-grid');
+      grid.setAttribute('data-bits', bits);
+    } catch(e) {
+      console.warn('Não consegui carregar /static/binary.txt:', e);
+    }
+  })();
+  </script>
+
+  <script>
+(async () => {
+  try {
+    const res = await fetch('/static/binary.txt');   // coloque o arquivo aqui
+    const raw = await res.text();
+
+    const pre1 = document.getElementById('binary-pre');
+    const pre2 = document.querySelector('#binary-bg pre.clone');
+
+    // duplicamos o conteúdo para garantir um scroll contínuo
+    const text = raw + '\n' + raw;
+    pre1.textContent = text;
+    pre2.textContent = text;
+
+    // define a duração da animação baseada no tamanho do conteúdo (px/s)
+    const SPEED_PX_SEC = 40; // ajuste: menor = mais lento, maior = mais rápido
+    function setDuration() {
+      // depois de renderizar, medimos a altura efetiva
+      const h = pre1.getBoundingClientRect().height;
+      if (h > 0) {
+        const dur = (h / SPEED_PX_SEC).toFixed(2) + 's';
+        pre1.style.animationDuration = dur;
+        pre2.style.animationDuration = dur;
+      }
+    }
+    requestAnimationFrame(setDuration);
+
+  } catch (err) {
+    console.warn('Não consegui carregar /static/binary.txt', err);
+  }
+})();
+</script>
+
+<script>
+(function() {
+  const canvas = document.getElementById('vscode-hero-canvas');
+  if(!canvas) return;
+
+  const ctx = canvas.getContext('2d', { alpha: true });
+  let w, h, dpr, t = 0;
+
+  function resize(){
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = canvas.clientWidth;
+    h = canvas.clientHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  window.addEventListener('resize', resize, { passive:true });
+  resize();
+
+  function wave(yBase, amp, freq, speed, color){
+    ctx.beginPath();
+    for(let x=0; x<=w; x+=2){
+      const y = yBase + Math.sin((x*freq) + t*speed) * amp;
+      x === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+
+  function loop(){
+    ctx.clearRect(0,0,w,h);
+    // 3 camadas com parallax (tons de verde translúcido)
+    wave(h*0.62, 22, 0.010, 0.018, 'rgba(0,224,163,0.08)');
+    wave(h*0.58, 28, 0.012, 0.022, 'rgba(0,224,163,0.10)');
+    wave(h*0.54, 36, 0.014, 0.026, 'rgba(0,224,163,0.12)');
+    t += 1;
+    requestAnimationFrame(loop);
+  }
+
+  const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if (!media.matches) loop();
+})();
+</script>
+
+</body>
+
+</html>

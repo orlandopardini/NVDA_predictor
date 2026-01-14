@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treino Avançado - NVIDIA LSTM</title>
+    <script src="https://cdn.plot.ly/plotly-2.14.0.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1e90ff;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 0 0 20px rgba(30, 144, 255, 0.3);
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(30, 144, 255, 0.2);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #1e90ff;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(30, 144, 255, 0.3);
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #1e90ff;
+            box-shadow: 0 0 15px rgba(30, 144, 255, 0.2);
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #76ff03 0%, #52b202 100%);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(118, 255, 3, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #00bcd4 0%, #0097a7 100%);
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 188, 212, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .status {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 4px solid #1e90ff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .status.active {
+            display: block;
+        }
+
+        .status.info { border-left-color: #00bcd4; }
+        .status.success { border-left-color: #1e90ff; }
+        .status.error { border-left-color: #f44336; }
+        .status.warning { border-left-color: #ffc107; }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #76ff03, #52b202);
+            width: 0%;
+            transition: width 0.3s ease;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .winner-card {
+            background: linear-gradient(135deg, rgba(30, 144, 255, 0.1) 0%, rgba(28, 126, 214, 0.1) 100%);
+            border: 2px solid #1e90ff;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(30, 144, 255, 0.2);
+        }
+
+        .winner-card h2 {
+            color: #1e90ff;
+            margin-bottom: 20px;
+            font-size: 2rem;
+            text-align: center;
+        }
+
+        .winner-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #1e90ff;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .models-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .models-table th {
+            background: rgba(30, 144, 255, 0.1);
+            color: #1e90ff;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+        }
+
+        .models-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .models-table tr:hover {
+            background: rgba(30, 144, 255, 0.05);
+        }
+
+        .rank {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-weight: 700;
+            background: rgba(30, 144, 255, 0.2);
+            color: #1e90ff;
+        }
+
+        .rank.gold { background: linear-gradient(135deg, #ffd700, #ffa500); color: #000; }
+        .rank.silver { background: linear-gradient(135deg, #c0c0c0, #808080); color: #000; }
+        .rank.bronze { background: linear-gradient(135deg, #cd7f32, #8b4513); color: #fff; }
+
+        .info-box {
+            background: rgba(0, 188, 212, 0.1);
+            border: 1px solid rgba(0, 188, 212, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .info-box h4 {
+            color: #00bcd4;
+            margin-bottom: 10px;
+        }
+
+        .info-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-box li {
+            padding: 5px 0;
+            color: #ccc;
+        }
+
+        .info-box li::before {
+            content: "▸ ";
+            color: #00bcd4;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .loader {
+            border: 3px solid rgba(118, 255, 3, 0.1);
+            border-top: 3px solid #76ff03;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .model-checkbox {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .model-checkbox:hover {
+            background: rgba(30, 144, 255, 0.1);
+        }
+
+        .model-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+            cursor: pointer;
+            accent-color: #1e90ff;
+        }
+
+        .model-checkbox label {
+            margin: 0;
+            font-size: 0.9rem;
+            font-weight: normal;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .model-checkbox.selected {
+            background: rgba(118, 255, 3, 0.15);
+            border: 1px solid rgba(118, 255, 3, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1 style="margin: 0;">🎯 Treino Avançado - Sistema de 30 Modelos NVIDIA</h1>
+            <a href="/" style="background: #1e90ff; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; transition: background 0.3s;" 
+               onmouseover="this.style.background='#1c7ed6'" 
+               onmouseout="this.style.background='#1e90ff'">
+                ← Voltar à Tela Principal
+            </a>
+        </div>
+
+        <div class="controls">
+            <div class="form-group">
+                <label>Modo de Treino</label>
+                <select id="mode">
+                    <option value="fast">Modo Rápido (1 epoch por modelo - ~5 minutos)</option>
+                    <option value="optimized">Modo Otimizado (Busca de Hiperparâmetros - ~30-60 minutos)</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="strategy-group" style="display: none;">
+                <label>Estratégia de Otimização</label>
+                <select id="optimization_strategy">
+                    <option value="random">Random Search (Rápido e eficiente)</option>
+                    <option value="grid">Grid Search (Completo mas lento)</option>
+                    <option value="bayesian">Bayesian Optimization (Inteligente)</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="trials-group" style="display: none;">
+                <label>Número de Tentativas por Modelo</label>
+                <input type="number" id="n_trials" value="20" min="5" max="100">
+            </div>
+
+            <div class="form-group">
+                <label>Lookback (Janela Temporal)</label>
+                <input type="number" id="lookback" value="60" min="10" max="120">
+            </div>
+
+            <div class="form-group">
+                <label>Horizon (Dias à Frente)</label>
+                <input type="number" id="horizon" value="1" min="1" max="30">
+            </div>
+
+            <div class="form-group">
+                <label style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>Seleção de Modelos</span>
+                    <button type="button" class="btn" style="padding: 6px 12px; font-size: 0.85rem;" onclick="toggleAllModels()">
+                        <span id="toggle-text">Selecionar Todos</span>
+                    </button>
+                </label>
+                <div style="max-height: 300px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 15px;">
+                    <div id="model-selection" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px;"></div>
+                </div>
+                <div style="margin-top: 10px; color: #888; font-size: 0.9rem;">
+                    <span id="selected-count">0</span> modelos selecionados
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h4>💡 Sobre os Modos:</h4>
+                <ul>
+                    <li><strong>Rápido:</strong> Testa todos os 30 modelos com 1 epoch. Identifica rapidamente qual arquitetura é promissora.</li>
+                    <li><strong>Otimizado:</strong> Faz busca inteligente de hiperparâmetros (learning rate, batch size, dropout, activation). Retorna o melhor modelo possível.</li>
+                </ul>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="startTraining()" title="Inicia o treinamento conforme modo selecionado. Modo rápido ~5min, otimizado ~30-60min">Iniciar Treino Avançado</button>
+                <button class="btn btn-secondary" onclick="viewModelsInfo()" title="Exibe lista completa dos 30 modelos organizados em 6 categorias (LSTM, GRU, BiLSTM, etc.)">Ver 30 Modelos Disponíveis</button>
+            </div>
+        </div>
+
+        <div class="status" id="status">
+            <div id="status-text">Aguardando...</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        const modeSelect = document.getElementById('mode');
+        const strategyGroup = document.getElementById('strategy-group');
+        const trialsGroup = document.getElementById('trials-group');
+        let allModels = [];
+        let allSelected = false;
+
+        modeSelect.addEventListener('change', () => {
+            const isOptimized = modeSelect.value === 'optimized';
+            strategyGroup.style.display = isOptimized ? 'block' : 'none';
+            trialsGroup.style.display = isOptimized ? 'block' : 'none';
+        });
+
+        // Carrega lista de modelos ao inicializar
+        async function loadModels() {
+            try {
+                const response = await fetch('/api/models-info');
+                const data = await response.json();
+                allModels = data.models;
+                renderModelCheckboxes();
+            } catch (error) {
+                console.error('Erro ao carregar modelos:', error);
+            }
+        }
+
+        function renderModelCheckboxes() {
+            const container = document.getElementById('model-selection');
+            container.innerHTML = '';
+            
+            allModels.forEach(model => {
+                const div = document.createElement('div');
+                div.className = 'model-checkbox';
+                div.innerHTML = `
+                    <input type="checkbox" id="model-${model.id}" value="${model.id}" onchange="updateSelectedCount()">
+                    <label for="model-${model.id}">${model.id}. ${model.name}</label>
+                `;
+                container.appendChild(div);
+            });
+            
+            updateSelectedCount();
+        }
+
+        function toggleAllModels() {
+            allSelected = !allSelected;
+            const checkboxes = document.querySelectorAll('#model-selection input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = allSelected);
+            
+            document.getElementById('toggle-text').textContent = allSelected ? 'Desmarcar Todos' : 'Selecionar Todos';
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const checkboxes = document.querySelectorAll('#model-selection input[type="checkbox"]:checked');
+            document.getElementById('selected-count').textContent = checkboxes.length;
+            
+            // Atualiza estilo dos checkboxes selecionados
+            document.querySelectorAll('.model-checkbox').forEach(div => {
+                const checkbox = div.querySelector('input[type="checkbox"]');
+                if (checkbox.checked) {
+                    div.classList.add('selected');
+                } else {
+                    div.classList.remove('selected');
+                }
+            });
+        }
+
+        function getSelectedModelIds() {
+            const checkboxes = document.querySelectorAll('#model-selection input[type="checkbox"]:checked');
+            const ids = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            return ids.length > 0 ? ids : null; // null = todos os modelos
+        }
+
+        // Carrega modelos ao carregar a página
+        window.addEventListener('DOMContentLoaded', loadModels);
+
+        let progressInterval = null;
+
+        async function startProgressPolling() {
+            // Faz polling do progresso a cada 500ms
+            const statusDiv = document.getElementById('status');
+            const statusText = document.getElementById('status-text');
+            const progressFill = document.getElementById('progress-fill');
+
+            progressInterval = setInterval(async () => {
+                try {
+                    const response = await fetch('/api/train-progress');
+                    if (!response.ok) return;
+                    
+                    const progress = await response.json();
+                    
+                    if (progress.is_training) {
+                        // Atualiza progresso
+                        progressFill.style.width = `${progress.percent}%`;
+                        statusText.textContent = progress.message;
+                        
+                        // Mostra detalhes no console
+                        if (progress.mode === 'optimized') {
+                            console.log(`Progresso: ${progress.current_model}/${progress.total_models} modelos, ` +
+                                       `trial ${progress.current_trial}/${progress.total_trials} - ${progress.percent.toFixed(1)}%`);
+                        } else {
+                            console.log(`Progresso: ${progress.current_model}/${progress.total_models} modelos - ${progress.percent.toFixed(1)}%`);
+                        }
+                    } else {
+                        // Treino finalizado
+                        if (progressInterval) {
+                            clearInterval(progressInterval);
+                            progressInterval = null;
+                        }
+                        
+                        if (progress.error) {
+                            statusDiv.className = 'status active error';
+                            statusText.textContent = progress.message;
+                            progressFill.style.width = '0%';
+                        } else if (progress.percent === 100) {
+                            progressFill.style.width = '100%';
+                            // Aguarda a resposta final do servidor
+                        }
+                    }
+                } catch (error) {
+                    console.error('Erro ao consultar progresso:', error);
+                }
+            }, 500);
+        }
+
+        function stopProgressPolling() {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+        }
+
+        async function startTraining() {
+            const statusDiv = document.getElementById('status');
+            const statusText = document.getElementById('status-text');
+            const progressFill = document.getElementById('progress-fill');
+            const resultsDiv = document.getElementById('results');
+
+            // Valida seleção de modelos
+            const selectedIds = getSelectedModelIds();
+            if (selectedIds && selectedIds.length === 0) {
+                alert('Por favor, selecione pelo menos um modelo para treinar!');
+                return;
+            }
+
+            statusDiv.className = 'status active info';
+            statusText.textContent = 'Iniciando treino...';
+            progressFill.style.width = '0%';
+            resultsDiv.classList.remove('active');
+
+            const payload = {
+                mode: document.getElementById('mode').value,
+                lookback: parseInt(document.getElementById('lookback').value),
+                horizon: parseInt(document.getElementById('horizon').value),
+                model_ids: selectedIds // null = todos, ou array de IDs
+            };
+
+            if (payload.mode === 'optimized') {
+                payload.optimization_strategy = document.getElementById('optimization_strategy').value;
+                payload.n_trials = parseInt(document.getElementById('n_trials').value);
+            }
+
+            try {
+                // Inicia polling de progresso
+                startProgressPolling();
+
+                statusText.textContent = `Treinando modelos (${payload.mode === 'fast' ? 'modo rápido' : 'modo otimizado'})...`;
+
+                const response = await fetch('/api/train-advanced', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                // Para o polling
+                stopProgressPolling();
+
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+
+                const data = await response.json();
+                progressFill.style.width = '100%';
+
+                if (data.status === 'success') {
+                    statusDiv.className = 'status active success';
+                    statusText.textContent = 'Treino concluído com sucesso!';
+                    displayResults(data);
+                } else {
+                    throw new Error(data.error || 'Erro desconhecido');
+                }
+
+            } catch (error) {
+                stopProgressPolling();
+                statusDiv.className = 'status active error';
+                statusText.textContent = `Erro: ${error.message}`;
+                progressFill.style.width = '0%';
+            }
+        }
+
+        function displayResults(data) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.classList.add('active');
+
+            const winner = data.winner;
+            
+            let html = `
+                <div class="winner-card">
+                    <h2>🏆 Modelo Campeão</h2>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <div style="font-size: 1.5rem; color: #1e90ff; margin-bottom: 10px;">
+                            Modelo ${winner.model_id}: ${winner.model_name}
+                        </div>
+                    </div>
+                    
+                    <div style="margin: 20px 0;">
+                        <h4 style="color: #1e90ff; margin-bottom: 12px;">📊 Métricas de Performance</h4>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                            <div class="stat-box">
+                                <div class="stat-label">RMSE</div>
+                                <div class="stat-value">${winner.best_rmse ? winner.best_rmse.toFixed(4) : winner.rmse.toFixed(4)}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">MAE</div>
+                                <div class="stat-value">${winner.mae ? winner.mae.toFixed(4) : '-'}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">MAPE</div>
+                                <div class="stat-value">${winner.mape ? winner.mape.toFixed(2) + '%' : '-'}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Pearson</div>
+                                <div class="stat-value">${winner.pearson_corr ? winner.pearson_corr.toFixed(4) : '-'}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="winner-stats">
+            `;
+
+            if (data.mode === 'optimized') {
+                html += `
+                        <div class="stat-box">
+                            <div class="stat-label">Tempo Total</div>
+                            <div class="stat-value">${(data.total_time / 60).toFixed(1)}min</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Modelos Testados</div>
+                            <div class="stat-value">${data.total_models_tested}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Tentativas</div>
+                            <div class="stat-value">${winner.n_trials}</div>
+                        </div>
+                `;
+            }
+
+            html += `
+                    </div>
+            `;
+
+            if (winner.best_params) {
+                html += `
+                    <div class="info-box">
+                        <h4>🔧 Melhores Hiperparâmetros:</h4>
+                        <ul>
+                            <li><strong>Learning Rate:</strong> ${winner.best_params.learning_rate}</li>
+                            <li><strong>Batch Size:</strong> ${winner.best_params.batch_size}</li>
+                            <li><strong>Dropout:</strong> ${winner.best_params.dropout_rate}</li>
+                            <li><strong>Epochs:</strong> ${winner.best_params.epochs}</li>
+                            <li><strong>Activation:</strong> ${winner.best_params.activation}</li>
+                        </ul>
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
+
+            // Seções de visualizações
+            html += `
+                <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 25px; margin-top: 30px;">
+                    <h2 style="color: #1e90ff; margin-bottom: 20px;">📈 Visualizações do Modelo Campeão</h2>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                        <div id="chartPredictions" style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 15px; min-height: 400px;"></div>
+                        <div id="chartScatter" style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 15px; min-height: 400px;"></div>
+                        <div id="chartResiduals" style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 15px; min-height: 400px;"></div>
+                        <div id="chartErrorHistogram" style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 15px; min-height: 400px;"></div>
+                    </div>
+                </div>
+            `;
+
+            // Tabela de todos os modelos
+            const allResults = data.all_results || data.results || [];
+            if (allResults.length > 1) {
+                const sortedResults = [...allResults].sort((a, b) => 
+                    (a.best_rmse || a.rmse) - (b.best_rmse || b.rmse)
+                );
+
+                html += `
+                    <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 25px;">
+                        <h2 style="color: #1e90ff; margin-bottom: 20px;">📊 Ranking de Todos os Modelos</h2>
+                        <table class="models-table">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Modelo</th>
+                                    <th>Nome</th>
+                                    <th>RMSE</th>
+                                    <th>MAE</th>
+                                    <th>MAPE</th>
+                                    <th>Pearson</th>
+                                    ${data.mode === 'optimized' ? '<th>Tempo (s)</th>' : ''}
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                sortedResults.forEach((result, idx) => {
+                    const rankClass = idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : '';
+                    const rmse = result.best_rmse || result.rmse;
+                    html += `
+                        <tr>
+                            <td><span class="rank ${rankClass}">${idx + 1}</span></td>
+                            <td>${result.model_id}</td>
+                            <td>${result.model_name}</td>
+                            <td>${rmse.toFixed(4)}</td>
+                            <td>${result.mae ? result.mae.toFixed(4) : '-'}</td>
+                            <td>${result.mape ? result.mape.toFixed(2) + '%' : '-'}</td>
+                            <td>${result.pearson_corr ? result.pearson_corr.toFixed(4) : '-'}</td>
+                            ${data.mode === 'optimized' ? `<td>${result.elapsed_time ? result.elapsed_time.toFixed(1) : '-'}</td>` : ''}
+                        </tr>
+                    `;
+                });
+
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            resultsDiv.innerHTML = html;
+            
+            // Carrega dados de visualização do modelo vencedor
+            loadWinnerVisualizations(winner);
+        }
+
+        async function loadWinnerVisualizations(winner) {
+            try {
+                // Busca dados do modelo vencedor para visualizações
+                const response = await fetch(`/api/advanced-model-predictions?model_id=${winner.model_id}&version=${winner.version || 'latest'}`);
+                if (!response.ok) {
+                    console.warn('Não foi possível carregar visualizações');
+                    return;
+                }
+                
+                const vizData = await response.json();
+                
+                // Cria gráficos
+                createPredictionsChart(vizData);
+                createScatterChart(vizData);
+                createResidualsChart(vizData);
+                createErrorHistogramChart(vizData);
+                
+            } catch (error) {
+                console.error('Erro ao carregar visualizações:', error);
+            }
+        }
+
+        function createPredictionsChart(data) {
+            const traces = [
+                {
+                    x: data.dates,
+                    y: data.actual,
+                    name: 'Real',
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { color: '#76ff03', width: 2 }
+                },
+                {
+                    x: data.dates,
+                    y: data.predicted,
+                    name: 'Predito',
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { color: '#00bcd4', width: 2, dash: 'dash' }
+                }
+            ];
+
+            const layout = {
+                title: { text: 'Predições vs Valores Reais', font: { size: 16 } },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0.2)',
+                font: { color: '#e0e0e0', size: 12 },
+                xaxis: { title: 'Data', gridcolor: 'rgba(255,255,255,0.1)' },
+                yaxis: { title: 'Preço ($)', gridcolor: 'rgba(255,255,255,0.1)' },
+                legend: { x: 0, y: 1 },
+                autosize: true,
+                height: 380,
+                margin: { t: 50, b: 50, l: 60, r: 30 }
+            };
+
+            Plotly.newPlot('chartPredictions', traces, layout, {responsive: true, displayModeBar: false});
+        }
+
+        function createScatterChart(data) {
+            const traces = [{
+                x: data.actual,
+                y: data.predicted,
+                mode: 'markers',
+                type: 'scatter',
+                marker: { color: '#76ff03', size: 6 },
+                name: 'Predições'
+            }, {
+                x: [Math.min(...data.actual), Math.max(...data.actual)],
+                y: [Math.min(...data.actual), Math.max(...data.actual)],
+                mode: 'lines',
+                type: 'scatter',
+                line: { color: '#ff5252', dash: 'dash' },
+                name: 'Ideal'
+            }];
+
+            const layout = {
+                title: { text: 'Scatter Plot: Real vs Predito', font: { size: 16 } },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0.2)',
+                font: { color: '#e0e0e0', size: 12 },
+                xaxis: { title: 'Valor Real ($)', gridcolor: 'rgba(255,255,255,0.1)' },
+                yaxis: { title: 'Valor Predito ($)', gridcolor: 'rgba(255,255,255,0.1)' },
+                autosize: true,
+                height: 380,
+                margin: { t: 50, b: 50, l: 60, r: 30 }
+            };
+
+            Plotly.newPlot('chartScatter', traces, layout, {responsive: true, displayModeBar: false});
+        }
+
+        function createResidualsChart(data) {
+            const residuals = data.actual.map((v, i) => data.predicted[i] - v);
+            
+            const traces = [{
+                x: data.dates,
+                y: residuals,
+                mode: 'markers',
+                type: 'scatter',
+                marker: { color: '#00bcd4', size: 5 },
+                name: 'Resíduos'
+            }, {
+                x: [data.dates[0], data.dates[data.dates.length - 1]],
+                y: [0, 0],
+                mode: 'lines',
+                type: 'scatter',
+                line: { color: '#ff5252', dash: 'dash' },
+                name: 'Zero'
+            }];
+
+            const layout = {
+                title: { text: 'Resíduos (Erro de Predição)', font: { size: 16 } },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0.2)',
+                font: { color: '#e0e0e0', size: 12 },
+                xaxis: { title: 'Data', gridcolor: 'rgba(255,255,255,0.1)' },
+                yaxis: { title: 'Resíduo ($)', gridcolor: 'rgba(255,255,255,0.1)' },
+                autosize: true,
+                height: 380,
+                margin: { t: 50, b: 50, l: 60, r: 30 }
+            };
+
+            Plotly.newPlot('chartResiduals', traces, layout, {responsive: true, displayModeBar: false});
+        }
+
+        function createErrorHistogramChart(data) {
+            const errors = data.actual.map((v, i) => Math.abs(data.predicted[i] - v));
+            
+            const traces = [{
+                x: errors,
+                type: 'histogram',
+                marker: { color: '#76ff03' },
+                nbinsx: 30
+            }];
+
+            const layout = {
+                title: { text: 'Distribuição dos Erros Absolutos', font: { size: 16 } },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0.2)',
+                font: { color: '#e0e0e0', size: 12 },
+                xaxis: { title: 'Erro Absoluto ($)', gridcolor: 'rgba(255,255,255,0.1)' },
+                yaxis: { title: 'Frequência', gridcolor: 'rgba(255,255,255,0.1)' },
+                autosize: true,
+                height: 380,
+                margin: { t: 50, b: 50, l: 60, r: 30 }
+            };
+
+            Plotly.newPlot('chartErrorHistogram', traces, layout, {responsive: true, displayModeBar: false});
+        }
+
+        async function viewModelsInfo() {
+            try {
+                const response = await fetch('/api/models-info');
+                const data = await response.json();
+
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.classList.add('active');
+
+                let html = `
+                    <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 25px;">
+                        <h2 style="color: #1e90ff; margin-bottom: 20px;">📚 ${data.total_models} Modelos Disponíveis</h2>
+                `;
+
+                for (const [category, ids] of Object.entries(data.categories)) {
+                    html += `
+                        <div style="margin-bottom: 30px;">
+                            <h3 style="color: #00bcd4; margin-bottom: 15px;">${category}</h3>
+                            <table class="models-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60px;">ID</th>
+                                        <th style="width: 220px;">Nome</th>
+                                        <th style="width: auto;">Descrição Técnica</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+
+                    ids.forEach(id => {
+                        const model = data.models.find(m => m.id === id);
+                        html += `
+                            <tr>
+                                <td><strong>${model.id}</strong></td>
+                                <td><strong>${model.name}</strong></td>
+                                <td style="font-size: 0.9em; color: #ccc; line-height: 1.5;">${model.description || 'Sem descrição'}</td>
+                            </tr>
+                        `;
+                    });
+
+                    html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                }
+
+                html += `</div>`;
+                resultsDiv.innerHTML = html;
+
+            } catch (error) {
+                alert(`Erro ao buscar modelos: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>

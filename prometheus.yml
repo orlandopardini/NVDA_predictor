@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Coleta métricas da sua aplicação Flask
+  - job_name: 'flask-app'
+    static_configs:
+      - targets: ['host.docker.internal:5000']
+        labels:
+          app: 'stock-lstm-flask'
+    metrics_path: '/metrics'

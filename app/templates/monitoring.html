@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  .metrics-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 30px;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 12px;
+  }
+  
+  .metrics-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  
+  .metrics-header h1 {
+    color: #1e90ff;
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+  }
+  
+  .metrics-header p {
+    color: #aaa;
+    font-size: 1.2rem;
+  }
+  
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 30px;
+    margin-top: 30px;
+  }
+  
+  .metric-card {
+    background: linear-gradient(135deg, rgba(30, 144, 255, 0.1) 0%, rgba(30, 30, 30, 0.9) 100%);
+    border: 2px solid #1e90ff;
+    border-radius: 12px;
+    padding: 30px;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  
+  .metric-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(30, 144, 255, 0.3);
+  }
+  
+  .metric-card h2 {
+    color: #1e90ff;
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .metric-card p {
+    color: #ccc;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  
+  .metric-card .btn-link {
+    display: inline-block;
+    padding: 12px 24px;
+    background: #1e90ff;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 1.15rem;
+    font-weight: 500;
+    transition: background 0.3s;
+  }
+  
+  .metric-card .btn-link:hover {
+    background: #1c7ed6;
+  }
+  
+  .status-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-top: 10px;
+  }
+  
+  .status-running {
+    background: rgba(30, 144, 255, 0.2);
+    color: #1e90ff;
+    border: 1px solid #1e90ff;
+  }
+  
+  .status-stopped {
+    background: rgba(244, 67, 54, 0.2);
+    color: #F44336;
+    border: 1px solid #F44336;
+  }
+  
+  .setup-section {
+    background: rgba(40, 40, 40, 0.9);
+    border-left: 4px solid #1e90ff;
+    padding: 25px;
+    margin: 30px 0;
+    border-radius: 8px;
+  }
+  
+  .setup-section h3 {
+    color: #1e90ff;
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+  }
+  
+  .setup-section code {
+    display: block;
+    background: #1a1a1a;
+    padding: 15px;
+    border-radius: 6px;
+    color: #1e90ff;
+    font-family: 'Courier New', monospace;
+    font-size: 1.1rem;
+    margin: 10px 0;
+    overflow-x: auto;
+  }
+  
+  .setup-section ul {
+    list-style: none;
+    padding-left: 0;
+  }
+  
+  .setup-section li {
+    color: #ccc;
+    font-size: 1.1rem;
+    margin: 10px 0;
+    padding-left: 25px;
+    position: relative;
+  }
+  
+  .setup-section li:before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: #1e90ff;
+    font-weight: bold;
+  }
+  
+  .back-link {
+    display: inline-block;
+    padding: 10px 20px;
+    background: #444;
+    color: #e0e0e0;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+  }
+  
+  .back-link:hover {
+    background: #555;
+  }
+</style>
+
+<div class="metrics-container">
+  <a href="/" class="back-link">← Voltar para Tela Principal</a>
+  
+  <div class="metrics-header">
+    <h1>Monitoramento de Métricas</h1>
+    <p>Visualize o desempenho do sistema em tempo real com Prometheus e Grafana</p>
+  </div>
+  
+  <div class="metrics-grid">
+    <!-- Grafana -->
+    <div class="metric-card">
+      <h2>
+        <span>📊</span>
+        Grafana
+      </h2>
+      <p>
+        Interface visual para dashboards interativos com gráficos de CPU, RAM, latência de requisições e métricas do modelo.
+      </p>
+      <p>
+        <strong>URL:</strong> http://localhost:3000<br>
+        <strong>Login:</strong> admin / admin
+      </p>
+      <a href="http://localhost:3000" target="_blank" class="btn-link">Abrir Grafana</a>
+      <div id="grafanaStatus" class="status-badge status-stopped">Status: Verificando...</div>
+    </div>
+    
+    <!-- Prometheus -->
+    <div class="metric-card">
+      <h2>
+        <span>🔥</span>
+        Prometheus
+      </h2>
+      <p>
+        Sistema de coleta e armazenamento de métricas em tempo real. Consulte dados brutos e execute queries PromQL.
+      </p>
+      <p>
+        <strong>URL:</strong> http://localhost:9090<br>
+        <strong>Metrics Endpoint:</strong> /metrics
+      </p>
+      <a href="http://localhost:9090" target="_blank" class="btn-link">Abrir Prometheus</a>
+      <div id="prometheusStatus" class="status-badge status-stopped">Status: Verificando...</div>
+    </div>
+    
+    <!-- Métricas Brutas -->
+    <div class="metric-card">
+      <h2>
+        <span>📈</span>
+        Métricas Brutas
+      </h2>
+      <p>
+        Endpoint de métricas em formato Prometheus. Utilizado pelo Prometheus para coletar dados da aplicação Flask.
+      </p>
+      <p>
+        <strong>Formato:</strong> Texto Prometheus<br>
+        <strong>Atualização:</strong> Em tempo real
+      </p>
+      <a href="/metrics" target="_blank" class="btn-link">Ver Métricas Brutas</a>
+      <div class="status-badge status-running">Status: Ativo</div>
+    </div>
+  </div>
+  
+  <!-- Setup Instructions -->
+  <div class="setup-section">
+    <h3>⚙️ Configuração Inicial</h3>
+    <p style="color: #ccc; font-size: 1.1rem;">Para iniciar o Grafana e Prometheus, execute no PowerShell:</p>
+    <code>docker-compose up -d</code>
+    
+    <h3 style="margin-top: 25px;">📋 Passos Após Iniciar</h3>
+    <ul>
+      <li>Acesse o Grafana em <strong>http://localhost:3000</strong></li>
+      <li>Faça login com <strong>admin/admin</strong></li>
+      <li>Adicione o Prometheus como Data Source: <strong>http://prometheus:9090</strong></li>
+      <li>Crie dashboards personalizados ou importe templates prontos</li>
+      <li>Verifique o Prometheus em <strong>http://localhost:9090/targets</strong></li>
+    </ul>
+    
+    <p style="color: #aaa; font-size: 1rem; margin-top: 20px;">
+      ℹ️ Documentação completa em <strong>GRAFANA_SETUP.md</strong>
+    </p>
+  </div>
+  
+  <!-- Métricas Disponíveis -->
+  <div class="setup-section">
+    <h3>📊 Métricas Coletadas</h3>
+    <ul>
+      <li><strong>http_requests</strong> - Total de requisições HTTP por endpoint e método</li>
+      <li><strong>http_request_duration_seconds</strong> - Latência das requisições HTTP</li>
+      <li><strong>http_requests_in_progress</strong> - Requisições em andamento</li>
+      <li><strong>inference_seconds</strong> - Tempo de inferência do modelo LSTM</li>
+      <li><strong>retrain_total</strong> - Contador de retreinagens do modelo</li>
+      <li><strong>retrain_duration_seconds</strong> - Duração dos treinos/retreinos</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+// Verificar status dos serviços
+async function checkService(url, elementId) {
+  try {
+    const response = await fetch(url, { mode: 'no-cors', signal: AbortSignal.timeout(3000) });
+    document.getElementById(elementId).className = 'status-badge status-running';
+    document.getElementById(elementId).textContent = 'Status: Online';
+  } catch (error) {
+    document.getElementById(elementId).className = 'status-badge status-stopped';
+    document.getElementById(elementId).textContent = 'Status: Offline';
+  }
+}
+
+// Verificar ao carregar a página
+window.addEventListener('DOMContentLoaded', () => {
+  checkService('http://localhost:3000', 'grafanaStatus');
+  checkService('http://localhost:9090', 'prometheusStatus');
+});
+</script>
+
+{% endblock %}

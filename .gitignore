@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Database
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# ML Models (muito grandes para git)
+models/
+*.keras
+*.h5
+*.pkl
+*.joblib
+*.scaler
+
+# Logs
+*.log
+logs/
+
+# Environment variables
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Monitoring Data - Não versionar
+grafana-data/
+prometheus-data/
+
+# Mas manter as pastas de provisionamento
+!grafana-provisioning/
+!grafana-provisioning/**
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Temporary files
+*.tmp
+*.bak
+*.backup
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*

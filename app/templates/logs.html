@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block title %}Logs do Sistema — Stock LSTM{% endblock %}
+{% block content %}
+
+<style>
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+  .toolbar button{padding:8px 16px;border-radius:8px;border:0;cursor:pointer;color:#fff}
+  .toolbar button.btn-alt{background:#556;border:1px solid #778}
+  .toolbar button.btn-danger{background:#c62828}
+  .toolbar button.btn-success{background:#2d6b2d}
+  
+  .log-container{background:#0f1424;border:1px solid #223;border-radius:16px;padding:16px;max-height:calc(100vh - 200px);overflow:auto;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+  .log-entry{font-family:ui-monospace,Menlo,Consolas,monospace;background:#0b0f1a;border-radius:8px;padding:8px 12px;margin-bottom:8px;border-left:3px solid #334}
+  .log-entry.ok{border-left-color:#7CFC9B}
+  .log-entry.err{border-left-color:#ff6b6b}
+  .log-entry.warn{border-left-color:#ffa726}
+  .log-time{color:#888;font-size:0.85em;margin-right:8px}
+  .log-msg{color:#e6eefc}
+  .ok .log-msg{color:#7CFC9B}
+  .err .log-msg{color:#ff6b6b}
+  .warn .log-msg{color:#ffa726}
+  .empty-state{text-align:center;padding:40px;color:#888}
+  .stats{display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+  .stat-card{background:#0f1424;border:1px solid #223;border-radius:12px;padding:12px 16px;flex:1;min-width:150px}
+  .stat-value{font-size:1.8em;font-weight:bold;color:#46c8ff}
+  .stat-label{font-size:0.85em;color:#888;margin-top:4px}
+</style>
+
+<div class="toolbar">
+  <a class="btn btn-alt" href="{{ url_for('web.home') }}" style="text-decoration:none;display:inline-block">&larr; Voltar ao início</a>
+  <button type="button" class="btn btn-success" onclick="refreshLogs()">🔄 Atualizar</button>
+  <button type="button" class="btn btn-danger" onclick="clearLogs()">🗑️ Limpar Logs</button>
+  <button type="button" class="btn btn-alt" onclick="exportLogs()">💾 Exportar</button>
+  <span style="margin-left:auto;color:#888;font-size:0.9em">Auto-atualiza a cada 5s</span>
+</div>
+
+<div class="stats">
+  <div class="stat-card">
+    <div class="stat-value" id="total-logs">0</div>
+    <div class="stat-label">Total de Logs</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" id="ok-logs" style="color:#7CFC9B">0</div>
+    <div class="stat-label">Sucesso</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" id="err-logs" style="color:#ff6b6b">0</div>
+    <div class="stat-label">Erros</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" id="warn-logs" style="color:#ffa726">0</div>
+    <div class="stat-label">Avisos</div>
+  </div>
+</div>
+
+<div class="log-container" id="logs-container">
+  <div class="empty-state">
+    Nenhum log disponível. Execute operações no sistema para ver logs aqui.
+  </div>
+</div>
+
+<script>
+function refreshLogs() {
+  try {
+    const logs = JSON.parse(localStorage.getItem('systemLogs') || '[]');
+    const container = document.getElementById('logs-container');
+    
+    if (logs.length === 0) {
+      container.innerHTML = '<div class="empty-state">Nenhum log disponível. Execute operações no sistema para ver logs aqui.</div>';
+      updateStats(logs);
+      return;
+    }
+    
+    const html = logs.map(log => `
+      <div class="log-entry ${log.kind}">
+        <span class="log-time">[${log.timeStr}]</span>
+        <span class="log-msg">${escapeHtml(log.message)}</span>
+      </div>
+    `).join('');
+    
+    container.innerHTML = html;
+    updateStats(logs);
+  } catch(e) {
+    console.error('Erro ao carregar logs:', e);
+    document.getElementById('logs-container').innerHTML = 
+      '<div class="empty-state" style="color:#ff6b6b">Erro ao carregar logs</div>';
+  }
+}
+
+function updateStats(logs) {
+  const total = logs.length;
+  const ok = logs.filter(l => l.kind === 'ok').length;
+  const err = logs.filter(l => l.kind === 'err').length;
+  const warn = logs.filter(l => l.kind === 'warn' || l.kind === 'warning').length;
+  
+  document.getElementById('total-logs').textContent = total;
+  document.getElementById('ok-logs').textContent = ok;
+  document.getElementById('err-logs').textContent = err;
+  document.getElementById('warn-logs').textContent = warn;
+}
+
+function clearLogs() {
+  if (confirm('Tem certeza que deseja limpar todos os logs?')) {
+    localStorage.removeItem('systemLogs');
+    refreshLogs();
+  }
+}
+
+function exportLogs() {
+  try {
+    const logs = JSON.parse(localStorage.getItem('systemLogs') || '[]');
+    const text = logs.map(log => `[${log.timeStr}] [${log.kind.toUpperCase()}] ${log.message}`).join('\n');
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `system-logs-${new Date().toISOString().slice(0,10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch(e) {
+    alert('Erro ao exportar logs: ' + e.message);
+  }
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Carrega logs ao abrir a página
+refreshLogs();
+
+// Auto-atualiza a cada 5 segundos
+setInterval(refreshLogs, 5000);
+</script>
+
+{% endblock %}
