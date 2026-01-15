@@ -291,7 +291,14 @@ def backtest():
     lookback = int(request.args.get('lookback', DEFAULT_LOOKBACK))
 
     # Carrega vencedor
-    model, scaler, rec = load_best_model(ticker)
+    try:
+        model, scaler, rec = load_best_model(ticker)
+    except ValueError as e:
+        return jsonify({
+            "error": f"Modelo não encontrado para {ticker}",
+            "message": "Execute o treinamento primeiro",
+            "hint": f"Acesse: /api/train?ticker={ticker}&epochs=30"
+        }), 404
 
     # Série temporal
     rows = (PrecoDiario.query

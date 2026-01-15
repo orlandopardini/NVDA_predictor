@@ -93,7 +93,9 @@ def predict():
         model, scaler, rec = load_best_model(ticker)
     except ValueError:
         return jsonify({
-            "error": "No winner model for this ticker; treine primeiro via POST /api/train"
+            "error": f"Modelo não encontrado para {ticker}",
+            "message": "Execute o treinamento primeiro",
+            "hint": f"Acesse: /api/train?ticker={ticker}&epochs=30"
         }), 404
 
     # Lê série temporal (prioriza adj_close)
