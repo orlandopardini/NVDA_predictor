@@ -1,7 +1,7 @@
 @echo off
 REM ============================================
 REM Script de Inicialização do Flask
-REM Stock LSTM Flask Application
+REM Stock LSTM Flask com Python 3.12
 REM ============================================
 
 echo.
@@ -11,13 +11,29 @@ echo ====================================
 echo.
 
 REM Verifica se o ambiente virtual existe
-if not exist ".venv\Scripts\python.exe" (
+if not exist "venv\Scripts\python.exe" (
     echo [ERRO] Ambiente virtual nao encontrado!
     echo.
     echo Execute primeiro: setup.bat
     echo.
     pause
     exit /b 1
+)
+
+REM Ativa o ambiente virtual
+call venv\Scripts\activate.bat
+
+REM Inicia o servidor Flask
+echo Iniciando servidor Flask...
+echo Acesse: http://127.0.0.1:5000
+echo.
+echo Pressione CTRL+C para parar o servidor
+echo.
+
+python -m flask run --host=0.0.0.0 --port=5000
+
+pause
+
 )
 
 REM Verifica se as dependências estão instaladas
