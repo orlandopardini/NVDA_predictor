@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
+*.pyc
 
 # Virtual Environment
 .venv/
@@ -44,9 +45,21 @@ logs/
 .DS_Store
 Thumbs.db
 
-# Monitoring Data - Não versionar
+# Monitoring Data - Não versionar dados de runtime
 grafana-data/
 prometheus-data/
+prometheus-data/**
+grafana-data/**
+
+# Backup files
+*.backup
+*.bak
+
+# Temporary files
+*.tmp
+temp/
+tmp/
+
 
 # Mas manter as pastas de provisionamento
 !grafana-provisioning/

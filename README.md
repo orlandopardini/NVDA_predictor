@@ -15,7 +15,7 @@
 
 **1️⃣ Configurar o Ambiente (Executar UMA VEZ)**
 ```bash
-setup.bat
+scripts\setup.bat
 ```
 Este script irá:
 - ✅ Instalar Python 3.12 (se necessário)
@@ -26,13 +26,13 @@ Este script irá:
 **2️⃣ Treinar Modelo (Primeira vez ou quando quiser retreinar)**
 ```bash
 venv\Scripts\activate
-python train_model.py NVDA 50
+python -m app.train_model NVDA 50
 ```
 Treina modelo LSTM para NVDA com 50 epochs (~5-10 minutos)
 
 **3️⃣ Iniciar o Servidor**
 ```bash
-start.bat
+scripts\start.bat
 ```
 Inicia aplicação Flask na porta 5000
 
@@ -42,15 +42,15 @@ Inicia aplicação Flask na porta 5000
 
 | Script | Quando Usar | O Que Faz |
 |--------|-------------|-----------|
-| `setup.bat` | **Primeira vez** ou após atualizar dependências | Configura ambiente completo com Python 3.12 |
-| `start.bat` | **Sempre que quiser iniciar** o servidor | Inicia aplicação Flask |
-| `train_model.py` | **Treinar/retreinar** modelos | Treina modelos LSTM para tickers |
+| `scripts\setup.bat` | **Primeira vez** ou após atualizar dependências | Configura ambiente completo com Python 3.12 |
+| `scripts\start.bat` | **Sempre que quiser iniciar** o servidor | Inicia aplicação Flask |
+| `python -m app.train_model` | **Treinar/retreinar** modelos | Treina modelos LSTM para tickers |
 
 ### 📝 Observações Importantes
 
 - **Python 3.12:** O setup instala automaticamente via winget
 - **Treinamento:** Necessário antes de usar previsões e backtests
-- **Porta em uso:** Se a porta 5000 estiver ocupada, edite em `start.bat`
+- **Porta em uso:** Se a porta 5000 estiver ocupada, edite em `scripts\start.bat`
 
 ---
 
