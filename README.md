@@ -9,28 +9,32 @@
 
 ##  Início Rápido (Windows)
 
-###  Configuração em 2 Passos
+###  Configuração em 3 Passos
 
-**Pré-requisitos:** Python 3.12+ ([Download](https://www.python.org/downloads/))
+**Pré-requisitos:** Nenhum! O setup instala Python 3.12 automaticamente
 
 **1️⃣ Configurar o Ambiente (Executar UMA VEZ)**
 ```bash
 setup.bat
 ```
 Este script irá:
-- ✅ Criar o ambiente virtual Python
+- ✅ Instalar Python 3.12 (se necessário)
+- ✅ Criar ambiente virtual com Python 3.12
 - ✅ Instalar todas as dependências (Flask, TensorFlow, etc)
 - ✅ Criar o banco de dados SQLite
-- ✅ Preparar o projeto para execução
 
-**2️⃣ Iniciar o Servidor (Sempre que quiser usar)**
+**2️⃣ Treinar Modelo (Primeira vez ou quando quiser retreinar)**
+```bash
+venv\Scripts\activate
+python train_model.py NVDA 50
+```
+Treina modelo LSTM para NVDA com 50 epochs (~5-10 minutos)
+
+**3️⃣ Iniciar o Servidor**
 ```bash
 start.bat
 ```
-Este script irá:
-- ✅ Ativar o ambiente virtual
-- ✅ Iniciar o servidor Flask na porta 5000
-- ✅ Abrir automaticamente no navegador
+Inicia aplicação Flask na porta 5000
 
 🌐 **Acesse:** http://127.0.0.1:5000
 
@@ -38,15 +42,15 @@ Este script irá:
 
 | Script | Quando Usar | O Que Faz |
 |--------|-------------|-----------|
-| `setup.bat` | **Primeira vez** ou após atualizar dependências | Instala/atualiza ambiente completo |
+| `setup.bat` | **Primeira vez** ou após atualizar dependências | Configura ambiente completo com Python 3.12 |
 | `start.bat` | **Sempre que quiser iniciar** o servidor | Inicia aplicação Flask |
-| `start.ps1` | Alternativa PowerShell para `start.bat` | Mesma função do start.bat |
+| `train_model.py` | **Treinar/retreinar** modelos | Treina modelos LSTM para tickers |
 
 ### 📝 Observações Importantes
 
-- **Primeira vez:** Execute `setup.bat` antes de usar `start.bat`
-- **Problemas com setup:** Execute como Administrador ou verifique se Python está no PATH
-- **Porta em uso:** Se a porta 5000 estiver ocupada, edite a porta em `start.bat`
+- **Python 3.12:** O setup instala automaticamente via winget
+- **Treinamento:** Necessário antes de usar previsões e backtests
+- **Porta em uso:** Se a porta 5000 estiver ocupada, edite em `start.bat`
 
 ---
 
