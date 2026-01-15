@@ -544,6 +544,10 @@ def _train_single_model(
     # Save model and scaler
     timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
     version = f"{ticker}_{model_id}_{timestamp}"
+    
+    # Ensure models directory exists
+    os.makedirs(MODELS_DIR, exist_ok=True)
+    
     path_model = os.path.join(MODELS_DIR, f"{version}.keras")
     path_scaler = os.path.join(MODELS_DIR, f"{version}.scaler")
     
