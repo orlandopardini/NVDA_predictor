@@ -1,6 +1,8 @@
 # 📈 Stock LSTM Prediction Platform
 ### Sistema End-to-End de Previsão de Séries Financeiras com Machine Learning
 
+LINK PARA O VÍDEO: https://youtu.be/S8Avbt5xZCo
+
 ![Python](https://img.shields.io/badge/Python-3.12-blue) ![Flask](https://img.shields.io/badge/Flask-3.0-green) ![TensorFlow](https://img.shields.io/badge/TensorFlow-2.18-orange) ![Quality](https://img.shields.io/badge/Code%20Quality-90.1%2F100-brightgreen) ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 > **Plataforma completa de previsão de preços de ações** usando LSTM (Long Short-Term Memory) com API REST, frontend interativo, monitoramento Prometheus e pipeline automatizado de ML.
@@ -488,45 +490,3 @@ python detailed_code_rules_analysis_v2.py
 - Validar formato JSON retornado
 
 ---
-
-## 📈 Roadmap
-
-### Em Desenvolvimento
-- [ ] **Testes automatizados** (pytest + coverage >80%)
-- [ ] **CI/CD Pipeline** (GitHub Actions)
-- [ ] **Cache Redis** para previsões
-- [ ] **Autoscaling** baseado em carga
-
-### Futuro
-- [ ] **Novos modelos:** GRU, Transformer, Prophet
-- [ ] **Mais features:** Sentimento (Twitter), notícias, indicadores técnicos
-- [ ] **Multi-asset:** Forex, crypto, commodities
-- [ ] **Trading bot:** Integração com corretoras (Alpaca, IB)
-- [ ] **A/B Testing** de modelos em produção
-
----
-
-## 📄 Licença
-
-MIT License - Veja [LICENSE](LICENSE) para detalhes.
-
----
-
-## 👨‍💻 Autor
-
-Desenvolvido com ❤️ usando Python, TensorFlow e Flask.
-
-**Status do Projeto:** ✅ Production Ready (Score: 90.1/100)
-
----
-
-## 📞 Suporte
-
-- 📚 **Documentação API:** `/apidocs` (Swagger)
-- 📊 **Métricas:** `/metrics` (Prometheus)
-- 🐛 **Issues:** GitHub Issues
-- 💬 **Discussões:** GitHub Discussions
-
----
-
-**⭐ Se este projeto foi útil, considere dar uma estrela!**
